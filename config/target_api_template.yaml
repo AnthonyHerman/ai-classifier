@@ -1,0 +1,48 @@
+# Target API Configuration Template
+# Copy this to local/target_api.yaml and fill in your actual values
+
+api:
+  # Your API endpoint details
+  url: "http://localhost:PORT"
+  endpoint: "/your/endpoint"
+  method: "POST"
+  headers:
+    Content-Type: "application/json"
+    # Add any other headers needed
+
+# Template for API requests
+# Use {{variable}} for dynamic substitution
+request_template:
+  # Example structure - modify for your API
+  prompt: "{{prompt}}"
+  # Add other fields as needed for your API
+  # Examples:
+  # messages: [{"role": "user", "content": "{{prompt}}"}]
+  # query: "{{prompt}}"
+  # session_id: "{{uuid}}"
+  # user_id: "{{uuid}}"
+
+# Available dynamic variables:
+# {{prompt}} - The test prompt
+# {{uuid}} - Unique identifier
+# {{timestamp}} - Current timestamp
+# {{random_string}} - Random alphanumeric string
+# {{counter}} - Incremental counter
+
+# How to extract the response text for evaluation
+response_extraction:
+  # JSONPath to extract response text
+  # Examples:
+  # "text" -> response["text"]
+  # "response.message" -> response["response"]["message"]
+  # "output.displayResponse" -> response["output"]["displayResponse"]
+  path: "response.text"
+
+# File containing system context for Claude evaluation
+system_context_file: "system_context.txt"
+
+# Optional: API-specific settings
+settings:
+  timeout: 30
+  retry_attempts: 3
+  rate_limit_delay: 1.0

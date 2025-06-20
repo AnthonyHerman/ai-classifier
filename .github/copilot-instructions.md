@@ -1,0 +1,2 @@
+# General instructions for Copilot
+Always validate with me prior to making any changes to the code. Prefer to think through things thorougly prior to suggesting any changes. We should come to a mutual agreement prior to any changes being suggested.

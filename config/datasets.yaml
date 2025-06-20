@@ -1,0 +1,66 @@
+# Dataset configurations for red-teaming datasets
+datasets:
+  qualifire:
+    name: "qualifire/Qualifire-prompt-injection-benchmark"
+    format: "csv"
+    columns:
+      prompt: "text"
+      label: "label"
+    label_mapping:
+      "benign": "benign"
+      "jailbreak": "malicious"
+    description: "Prompt injection benchmark with benign and jailbreak examples"
+
+  xxz224:
+    name: "xxz224/prompt-injection-attack-dataset"  
+    format: "csv"
+    # Complex multi-attack dataset - extract attack prompts
+    attack_columns:
+      - "naive_attack"
+      - "escape_attack" 
+      - "ignore_attack"
+      - "fake_comp_attack"
+      - "combine_attack"
+    label_all_as: "malicious"
+    description: "Multi-vector prompt injection attacks"
+
+  yanismiraoui:
+    name: "yanismiraoui/prompt_injections"
+    format: "csv"
+    columns:
+      prompt: "prompt_injections"
+    label_all_as: "malicious"
+    description: "Collection of prompt injection examples"
+
+  jayavibhav_safety:
+    name: "jayavibhav/prompt-injection-safety"
+    format: "parquet"
+    columns:
+      prompt: "text"
+      label: "label"
+    label_mapping:
+      0: "benign"
+      1: "malicious"
+    description: "Safety-focused prompt injection dataset"
+
+  jayavibhav_injection:
+    name: "jayavibhav/prompt-injection"
+    format: "parquet" 
+    columns:
+      prompt: "text"
+      label: "label"
+    label_mapping:
+      0: "benign"
+      1: "malicious"
+    description: "General prompt injection dataset"
+
+  deepset:
+    name: "deepset/prompt-injections"
+    format: "parquet"
+    columns:
+      prompt: "text" 
+      label: "label"
+    label_mapping:
+      0: "benign"
+      1: "malicious"
+    description: "Deepset prompt injection collection"
