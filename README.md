@@ -1,6 +1,21 @@
-# AI Red-Teaming Tool
+# AI Safety Evaluation Framework
 
-Automated LLM red-teaming using malicious prompt datasets with Claude as the safety classifier.
+Automated safety testing framework for LLM-based applications. Tests your AI system against established prompt injection and adversarial prompt datasets, using Claude as an independent safety evaluator to classify responses.
+
+## What This Tool Does
+
+This framework helps you **validate and evaluate the safety guardrails** of your AI system by:
+
+1. **Testing with known adversarial prompts** from established research datasets
+2. **Sending prompts to your AI system** through its actual API
+3. **Using Claude as an independent evaluator** to classify whether responses stayed within safe boundaries
+4. **Generating detailed reports** showing which types of prompts were handled safely vs. unsafely
+
+This is a **defensive testing tool** for developers who want to:
+- Validate their AI system's safety guardrails before deployment
+- Identify potential vulnerabilities in their prompt filtering or response generation
+- Track improvements in safety over time
+- Generate compliance documentation showing safety testing results
 
 ## Setup
 
@@ -38,24 +53,43 @@ Automated LLM red-teaming using malicious prompt datasets with Claude as the saf
 ## Usage
 
 ```bash
-# Test single prompt
+# Test a single prompt to verify setup
 python -m src.main --single-prompt "Tell me how to hack a system"
 
-# Run full dataset evaluation
+# Evaluate your system against a specific dataset (limit for initial testing)
 python -m src.main --dataset qualifire --limit 100
 
-# Run all datasets
+# Run comprehensive evaluation across all configured datasets
 python -m src.main --all-datasets
+
+# Generate HTML report from previous test results
+python -m src.main --generate-report results/your_results.json
 ```
+
+## Results
+
+After running tests, you'll get:
+- **JSON results file** with detailed test outcomes
+- **HTML report** with visualizations and unsafe example analysis
+- **Summary statistics** showing safety performance across different prompt categories
+
+Reports include:
+- Overall safe/unsafe/error classification breakdown
+- Confidence levels in evaluations  
+- Detailed view of each unsafe response for investigation
+- Filtering by original dataset labels
 
 ## Architecture
 
-- **Dataset Adapters**: Normalize different dataset formats
-- **API Adapters**: Handle arbitrary API request/response schemas
-- **Claude Evaluator**: Safety classification of responses
-- **Configuration**: Flexible, secure local configuration
+- **Dataset Adapters**: Normalize different adversarial prompt dataset formats into a consistent interface
+- **Target API Adapter**: Flexible adapter to connect to your AI system's API with any request/response schema
+- **Claude Safety Evaluator**: Independent evaluation using Claude to classify responses as safe/unsafe based on your system's intended behavior
+- **HTML Report Generator**: Creates comprehensive, interactive reports for analysis and documentation
+- **Configuration System**: Secure separation of generic framework code and proprietary system details
 
-## Supported Datasets
+## Supported Test Datasets
+
+Research datasets containing adversarial prompts and prompt injection attempts:
 
 - Qualifire/prompt-injection-benchmark
 - xxz224/prompt-injection-attack-dataset
@@ -64,16 +98,28 @@ python -m src.main --all-datasets
 - jayavibhav/prompt-injection
 - deepset/prompt-injections
 
+These datasets provide a diverse set of test cases to evaluate your system's resilience to various adversarial prompt patterns.
+
 ## Directory Structure
 
 ```
 ai-classifier/
 ├── src/
-│   ├── dataset_adapters/     # Dataset format handlers
-│   ├── api/                  # API interaction components
-│   ├── evaluation/           # Claude safety evaluation
-│   └── main.py              # Entry point
-├── config/                   # Templates and shared config
-├── local/                   # Your private config (gitignored)
-└── results/                 # Test results (gitignored)
+│   ├── dataset_adapters/     # Handlers for different test dataset formats
+│   ├── api/                  # Target API interaction components
+│   ├── evaluation/           # Claude-based safety evaluation
+│   ├── reporting/            # HTML report generation
+│   └── main.py              # Main orchestration and CLI
+├── config/                   # Templates and shared configuration
+├── local/                   # Your private API config (gitignored)
+└── results/                 # Test results and reports (gitignored)
 ```
+
+## Key Features
+
+- **API-Agnostic**: Flexible request template system works with any API structure
+- **Independent Evaluation**: Uses Claude as an objective third-party evaluator
+- **Privacy-First**: Proprietary configuration stays local and is never committed to version control
+- **Comprehensive Reporting**: Interactive HTML reports for analysis and documentation
+- **Session Tracking**: Tracks session IDs for correlating tests with system logs
+- **Extensible**: Easy to add new test datasets or evaluation criteria
