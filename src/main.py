@@ -13,6 +13,7 @@ from .config import config_manager
 from .dataset_adapters import create_adapter
 from .api.target_adapter import TargetAPIAdapter
 from .evaluation.claude_evaluator import ClaudeEvaluator
+from .reporting import HTMLReportGenerator
 
 
 class RedTeamingOrchestrator:
@@ -22,6 +23,7 @@ class RedTeamingOrchestrator:
         self.config_manager = config_manager
         self.target_api = None
         self.claude_evaluator = None
+        self.report_generator = HTMLReportGenerator()
         self.results = []
     
     async def initialize(self):
@@ -54,16 +56,17 @@ class RedTeamingOrchestrator:
         print(f"Testing prompt: {prompt[:50]}...")
         
         # Send to target API
-        response = await self.target_api.send_prompt(prompt)
+        response, session_id = await self.target_api.send_prompt(prompt)
         if response is None:
             return {
                 'prompt': prompt,
                 'response': None,
                 'evaluation': {'classification': 'ERROR', 'reasoning': 'API request failed'},
+                'session_id': session_id,
                 'timestamp': datetime.now().isoformat()
             }
         
-        print(f"Got response: {response[:100]}...")
+        print(f"Got response (session: {session_id}): {response[:100]}...")
         
         # Evaluate with Claude
         evaluation = await self.claude_evaluator.evaluate_response(prompt, response)
@@ -72,6 +75,7 @@ class RedTeamingOrchestrator:
             'prompt': prompt,
             'response': response,
             'evaluation': evaluation,
+            'session_id': session_id,
             'timestamp': datetime.now().isoformat()
         }
         
@@ -118,7 +122,7 @@ class RedTeamingOrchestrator:
         return results
     
     def save_results(self, results: List[Dict[str, Any]], filename: str = None):
-        """Save results to file."""
+        """Save results to JSON file and generate HTML report."""
         if filename is None:
             timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
             filename = f"redteam_results_{timestamp}.json"
@@ -126,12 +130,21 @@ class RedTeamingOrchestrator:
         results_dir = self.config_manager.project_root / "results"
         results_dir.mkdir(exist_ok=True)
         
-        filepath = results_dir / filename
-        with open(filepath, 'w') as f:
+        # Save JSON
+        json_filepath = results_dir / filename
+        with open(json_filepath, 'w') as f:
             json.dump(results, f, indent=2)
         
-        print(f"Results saved to {filepath}")
-        return filepath
+        print(f"Results saved to {json_filepath}")
+        
+        # Generate HTML report
+        try:
+            html_filepath = self.report_generator.generate_report(json_filepath)
+            print(f"HTML report generated: {html_filepath}")
+        except Exception as e:
+            print(f"Warning: Failed to generate HTML report: {e}")
+        
+        return json_filepath
     
     def analyze_results(self, results: List[Dict[str, Any]]):
         """Analyze and print summary of results."""
@@ -194,6 +207,12 @@ async def main():
         action="store_true", 
         help="Test all configured datasets"
     )
+    parser.add_argument(
+        "--generate-report",
+        type=str,
+        metavar="JSON_FILE",
+        help="Generate HTML report from existing JSON results file"
+    )
     
     args = parser.parse_args()
     
@@ -208,6 +227,22 @@ async def main():
         print("Available datasets:")
         for dataset in datasets:
             print(f"  - {dataset}")
+        return
+    
+    if args.generate_report:
+        # Generate report from existing JSON file
+        json_path = Path(args.generate_report)
+        if not json_path.exists():
+            print(f"Error: File not found: {json_path}")
+            sys.exit(1)
+        
+        generator = HTMLReportGenerator()
+        try:
+            html_path = generator.generate_report(json_path)
+            print(f"HTML report generated: {html_path}")
+        except Exception as e:
+            print(f"Error generating report: {e}")
+            sys.exit(1)
         return
     
     # Initialize orchestrator

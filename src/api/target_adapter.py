@@ -22,8 +22,9 @@ class TargetAPIAdapter:
         self.response_extraction = config['response_extraction']
         self.settings = config.get('settings', {})
         self._counter = 0
+        self._last_session_id = None
     
-    async def send_prompt(self, prompt: str) -> Optional[str]:
+    async def send_prompt(self, prompt: str) -> tuple[Optional[str], Optional[str]]:
         """
         Send a prompt to the target API and extract the response.
         
@@ -31,11 +32,11 @@ class TargetAPIAdapter:
             prompt: The prompt to send
             
         Returns:
-            Extracted response text or None if failed
+            Tuple of (extracted response text or None if failed, session_id used)
         """
         try:
             # Build the request
-            request_data = self._build_request(prompt)
+            request_data, session_id = self._build_request(prompt)
             
             # Send the request
             async with aiohttp.ClientSession() as session:
@@ -52,22 +53,28 @@ class TargetAPIAdapter:
                 ) as response:
                     if response.status == 200:
                         response_data = await response.json()
-                        return self._extract_response(response_data)
+                        return self._extract_response(response_data), session_id
                     else:
                         print(f"API request failed with status {response.status}")
-                        return None
+                        return None, session_id
                         
         except Exception as e:
             print(f"Error sending prompt to API: {e}")
-            return None
+            return None, self._last_session_id
     
-    def _build_request(self, prompt: str) -> Dict[str, Any]:
-        """Build request from template with dynamic value substitution."""
+    def _build_request(self, prompt: str) -> tuple[Dict[str, Any], str]:
+        """Build request from template with dynamic value substitution.
+        
+        Returns:
+            Tuple of (request_data, session_id used)
+        """
         # Generate dynamic values
         self._counter += 1
+        session_id = str(uuid.uuid4())
+        self._last_session_id = session_id
         values = {
             'prompt': prompt,
-            'uuid': str(uuid.uuid4()),
+            'uuid': session_id,
             'timestamp': int(time.time()),
             'random_string': ''.join(random.choices(
                 string.ascii_letters + string.digits, k=8
@@ -77,7 +84,7 @@ class TargetAPIAdapter:
         
         # Deep copy template and substitute values
         request_data = deepcopy(self.request_template)
-        return self._substitute_values(request_data, values)
+        return self._substitute_values(request_data, values), session_id
     
     def _substitute_values(self, obj: Any, values: Dict[str, Any]) -> Any:
         """Recursively substitute template values in nested structures."""
